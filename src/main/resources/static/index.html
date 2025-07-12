@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo List</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            background: #f9fafb;
+            color: #333;
+            padding: 0 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #222;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        #darkModeToggle {
+            display: block;
+            margin: 0 auto 30px auto;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: none;
+            background-color: #5c6ac4;
+            color: white;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        #darkModeToggle:hover {
+            background-color: #4a559d;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #5c6ac4;
+            box-shadow: 0 0 5px rgba(92, 106, 196, 0.5);
+        }
+
+        button[type="submit"] {
+            background-color: #5c6ac4;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #4a559d;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: white;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+
+        li:hover {
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+        }
+
+        .todo-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        span {
+            font-size: 16px;
+            line-height: 1.3;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #999;
+            font-style: italic;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        @media (max-width: 480px) {
+            form {
+                flex-direction: column;
+            }
+            button[type="submit"] {
+                width: 100%;
+            }
+            li {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .delete-btn {
+                align-self: flex-end;
+            }
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+         background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode h1 {
+    color: #e0e0e0;
+}
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode input[type="text"],
+        body.dark-mode button[type="submit"] {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border-color: #444;
+        }
+
+        body.dark-mode input[type="text"]:focus {
+            border-color: #bb86fc;
+            box-shadow: 0 0 5px rgba(187, 134, 252, 0.7);
+        }
+
+        body.dark-mode li {
+            background-color: #1e1e1e;
+            box-shadow: 0 1px 5px rgba(255 255 255 / 0.1);
+        }
+
+        body.dark-mode li:hover {
+            box-shadow: 0 3px 12px rgba(255 255 255 / 0.15);
+        }
+
+        body.dark-mode .delete-btn {
+            background-color: #cf6679;
+        }
+
+        body.dark-mode .delete-btn:hover {
+            background-color: #b85066;
+        }
+
+        body.dark-mode #darkModeToggle {
+            background-color: #bb86fc;
+            color: #121212;
+        }
+    </style>
+</head>
+<body>
+
+<h1>My Todo List</h1>
+
+<button id="darkModeToggle">Enable Dark Mode</button>
+
+<form id="todoForm">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="text" id="description" placeholder="Description (optional)" />
+    <button type="submit">Add Todo</button>
+</form>
+
+<ul id="todoList"></ul>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const apiUrl = 'http://localhost:8080';
+
+
+        async function loadTodos() {
+            const response = await fetch(apiUrl);
+            const todos = await response.json();
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.id = `todo-${todo.id}`;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = todo.completed;
+                checkbox.addEventListener('change', () => toggleCompleted(todo.id, checkbox.checked));
+
+                const span = document.createElement('span');
+                span.id = `text-${todo.id}`;
+                span.className = todo.completed ? 'completed' : '';
+                span.innerHTML = `<strong>${todo.title}</strong>${todo.description ? ` - ${todo.description}` : ''}`;
+
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'todo-left';
+                leftDiv.appendChild(checkbox);
+                leftDiv.appendChild(span);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.innerText = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+
+                li.appendChild(leftDiv);
+                li.appendChild(deleteBtn);
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('todoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+
+            if (!title) return;
+
+            const newTodo = { title, description, completed: false };
+
+            await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTodo)
+            });
+
+            document.getElementById('todoForm').reset();
+            loadTodos();
+        });
+
+        async function deleteTodo(id) {
+            if (!id) return;
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            const li = document.getElementById(`todo-${id}`);
+            if (li) li.remove();
+        }
+
+        async function toggleCompleted(id, newStatus) {
+            const response = await fetch(`${apiUrl}/${id}`);
+            const todo = await response.json();
+
+            const updatedTodo = {
+                title: todo.title,
+                description: todo.description,
+                completed: newStatus
+            };
+
+            const textEl = document.getElementById(`text-${id}`);
+            if (newStatus) {
+                textEl.classList.add('completed');
+            } else {
+                textEl.classList.remove('completed');
+            }
+
+            await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedTodo)
+            });
+        }
+
+        // Dark mode toggle
+        const toggleBtn = document.getElementById('darkModeToggle');
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if(document.body.classList.contains('dark-mode')) {
+                toggleBtn.textContent = 'Disable Dark Mode';
+            } else {
+                toggleBtn.textContent = 'Enable Dark Mode';
+            }
+        });
+
+        loadTodos();
+    });
+</script>
+
+</body>
+</html>
